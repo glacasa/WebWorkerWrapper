@@ -58,3 +58,5 @@ any other script :
 ### Limitations
 
 As the messaging between the threads is limited to string messages, the parameters of the functions can only be serializables javascript objects ; no functions allowed.
+
+The background worker is still single threaded : if you call several functions, they will be queud.
