@@ -1,8 +1,23 @@
 ﻿var BackgroundWorker = {};
 (function () {
 
-    if (window.Worker) {
+    function checkFunctionArgs(originalArgs) {
+        var args = [];
+        var callback = null;
+        for (var fnArg in originalArgs) {
+            if (typeof originalArgs[fnArg] === "function") {
+                callback = originalArgs[fnArg];
+            } else {
+                args.push(originalArgs[fnArg]);
+            }
+        }
+        return {
+            args: args,
+            callback: callback
+        };
+    }
 
+    if (window.Worker) {
         var worker = new Worker('js/worker.js');
 
         var callbackQueue = [];
@@ -14,24 +29,14 @@
             }
         }
 
-        function callFunction(functionName) {
+        function callFunctionAsync(functionName) {
             return function () {
-                //TODO : ici je suis sûr qu'on peut faire mieux.
-                // le pb étant que "arguments" n'étant pas un array, je peux pas le balancer tel quel au worker
-                var args = [];
-                var callback = null;
-                for (var fnArg in arguments) {
-                    if (typeof arguments[fnArg] === "function") {
-                        var callback = arguments[fnArg];
-                    } else {
-                        args.push(arguments[fnArg]);
-                    }
-                }
-                callbackQueue.push(callback);
+                var functionArgs = checkFunctionArgs(arguments);
+                callbackQueue.push(functionArgs.callback);
 
                 var message = {
                     functionName: functionName,
-                    args: args
+                    args: functionArgs.args
                 };
 
                 worker.postMessage(message);
@@ -40,10 +45,24 @@
 
         for (var fn in Code) {
             if (Code[fn] && typeof Code[fn] === "function") {
-                BackgroundWorker[fn] = callFunction(fn);
+                BackgroundWorker[fn] = callFunctionAsync(fn);
             }
         }
     } else {
-        //TODO : fallback
+        function callFunctionSync(functionName) {
+            return function() {
+                var functionArgs = checkFunctionArgs(arguments);
+                var result = Code[functionName](functionArgs.args);
+                if (functionArgs.callback) {
+                    functionArgs.callback(result);
+                }
+            }
+        }
+
+        for (fn in Code) {
+            if (Code[fn] && typeof Code[fn] === "function") {
+                BackgroundWorker[fn] = callFunctionSync(fn);
+            }
+        }
     }
 })();
