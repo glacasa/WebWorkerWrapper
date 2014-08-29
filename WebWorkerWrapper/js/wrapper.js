@@ -9,7 +9,7 @@
         worker.onmessage = function (event) {
             var callback = callbackQueue.shift();
             if (callback && typeof callback === "function") {
-                var result = JSON.parse(event.data);
+                var result = event.data;
                 callback(result);
             }
         }
@@ -29,10 +29,10 @@
                 }
                 callbackQueue.push(callback);
 
-                var message = JSON.stringify({
+                var message = {
                     functionName: functionName,
                     args: args
-                });
+                };
 
                 worker.postMessage(message);
             }
