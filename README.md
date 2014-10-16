@@ -60,3 +60,7 @@ any other script :
 As the messaging between the threads is limited to json objects, the parameters of the functions can only be serializables javascript objects ; no functions allowed.
 
 The background worker is still single threaded : if you call several functions, they will be queued.
+
+### Blog post
+
+If you speak french, I explained all this code here : http://blog.lacasa.fr/2014/simplifier-worker-javascript.html
